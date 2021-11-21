@@ -6,11 +6,11 @@ from domain.prediction_codes.prediction_codes import PredictionCodes
 
 def simple_linear(predictions: List[PredictionCodes]) -> AcidGraph:
     graph = AcidGraph()
-    prev_v = None
-    for prediction in predictions:
-        if prev_v is None:
-            prev_v = prediction.predicted_acid
+    for i, prediction in enumerate(predictions):
+        graph.push_vertex(prediction.predicted_acid)
+        if i == 0:
             continue
-        graph.push_edge(v1_name=prev_v, v2_name=prediction.predicted_acid)
-        prev_v = prediction.predicted_acid
+        graph.push_edge(i - 1, i)
+
+    str(graph)
     return graph
