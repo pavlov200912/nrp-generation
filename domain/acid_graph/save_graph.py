@@ -1,6 +1,6 @@
 import os
 
-from acid_graph.acid_graph import AcidGraph
+from domain.acid_graph.acid_graph import AcidGraph
 
 
 def save_graph(path_to_output: str, graph: AcidGraph):

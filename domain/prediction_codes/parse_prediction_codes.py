@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from prediction_codes.prediction_codes import PredictionCodes
+from domain.prediction_codes.prediction_codes import PredictionCodes
 
 
 def parse_prediction_codes(path_to_prediction: str) -> List[PredictionCodes]:

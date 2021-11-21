@@ -1,10 +1,10 @@
 import argparse
 import os
 
-from acid_graph.acid_graph import AcidGraph
-from acid_graph.save_graph import save_graph
+from domain.acid_graph.acid_graph import AcidGraph
+from domain.acid_graph.save_graph import save_graph
 from algorithms.simple_linear import simple_linear
-from prediction_codes.parse_prediction_codes import parse_prediction_codes
+from domain.prediction_codes.parse_prediction_codes import parse_prediction_codes
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate possible NRP structure variants.')

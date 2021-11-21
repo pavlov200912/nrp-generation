@@ -1,7 +1,7 @@
 from typing import List
 
-from acid_graph.acid_graph import AcidGraph
-from prediction_codes.prediction_codes import PredictionCodes
+from domain.acid_graph.acid_graph import AcidGraph
+from domain.prediction_codes.prediction_codes import PredictionCodes
 
 
 def simple_linear(predictions: List[PredictionCodes]) -> AcidGraph:
