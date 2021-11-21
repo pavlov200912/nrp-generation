@@ -1,16 +1,32 @@
-# This is a sample Python script.
+import argparse
+import os
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from acid_graph.acid_graph import AcidGraph
+from acid_graph.save_graph import save_graph
+from algorithms.simple_linear import simple_linear
+from prediction_codes.parse_prediction_codes import parse_prediction_codes
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Generate possible NRP structure variants.')
+    parser.add_argument('input', help='path to directory with antismash outputs')
+    parser.add_argument('--algorithm', default='simple', help='code name of an algorithm to use')
+    parser.add_argument('--output', help='path to output directory')
+    args = parser.parse_args()
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+    if not os.path.exists(args.input):
+        print("Invalid argument --input, directory doesn't exist")
 
+    input_dir_path = args.input
+    output_dir_path = './out' if args.output is None else args.output
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+    predictions_path = os.path.join(input_dir_path, 'nrpspks_predictions_txt', 'ctg1_nrpspredictor2_codes.txt')
+    predictions = parse_prediction_codes(path_to_prediction=predictions_path)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    algorithm = args.algorithm
+
+    if algorithm == 'simple':
+        graph = simple_linear(predictions)
+        for f in os.listdir(output_dir_path):
+            os.remove(os.path.join(output_dir_path, f))
+        save_graph(output_dir_path, graph)
+
