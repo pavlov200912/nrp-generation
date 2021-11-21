@@ -11,16 +11,19 @@ if __name__ == "__main__":
     parser.add_argument('input', help='path to directory with antismash outputs')
     parser.add_argument('--algorithm', default='simple', help='code name of an algorithm to use')
     parser.add_argument('--output', help='path to output directory')
+    parser.add_argument('--base_name', help='base name for output graph files')
     args = parser.parse_args()
 
     if not os.path.exists(args.input):
         print("Invalid argument --input, directory doesn't exist")
+
 
     input_dir_path = args.input
     output_dir_path = './out' if args.output is None else args.output
     if not os.path.exists(output_dir_path):
         print("Directory created", output_dir_path)
         os.mkdir(output_dir_path)
+    base_name = args.base_name if args.base_name is not None else ''
 
     predictions_path = os.path.join(input_dir_path, 'nrpspks_predictions_txt', 'ctg1_nrpspredictor2_codes.txt')
     predictions = parse_prediction_codes(path_to_prediction=predictions_path)
@@ -30,6 +33,7 @@ if __name__ == "__main__":
     if algorithm == 'simple':
         graph = simple_linear(predictions)
         for f in os.listdir(output_dir_path):
-            os.remove(os.path.join(output_dir_path, f))
-        save_graph(output_dir_path, graph)
+            if f.startswith(base_name):
+                os.remove(os.path.join(output_dir_path, f))
+        save_graph(output_dir_path, graph, base_name)
 
