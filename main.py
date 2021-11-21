@@ -18,6 +18,9 @@ if __name__ == "__main__":
 
     input_dir_path = args.input
     output_dir_path = './out' if args.output is None else args.output
+    if not os.path.exists(output_dir_path):
+        print("Directory created", output_dir_path)
+        os.mkdir(output_dir_path)
 
     predictions_path = os.path.join(input_dir_path, 'nrpspks_predictions_txt', 'ctg1_nrpspredictor2_codes.txt')
     predictions = parse_prediction_codes(path_to_prediction=predictions_path)
