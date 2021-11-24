@@ -14,6 +14,10 @@ if __name__ == "__main__":
     parser.add_argument('--base_name', help='base name for output graph files')
     parser.add_argument('--monomers',
                         help='path to the file with mapping from genome monomers to popular variants of graph monomers')
+
+    parser.add_argument('--bonds', dest='feature', action='store_true')
+    parser.add_argument('--no-bonds', dest='feature', action='store_false')
+    parser.set_defaults(feature=True)
     args = parser.parse_args()
 
     if not os.path.exists(args.input):
@@ -43,4 +47,4 @@ if __name__ == "__main__":
         if not os.path.exists(path_to_rban):
             raise FileNotFoundError("Can'r find rban.output.json")
 
-        replacements(path_to_details, path_to_rban, reverse_path, output_dir_path)
+        replacements(path_to_details, path_to_rban, reverse_path, output_dir_path, args.feature)

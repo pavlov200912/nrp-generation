@@ -3,6 +3,7 @@ import os
 from collections import defaultdict
 from typing import List, Dict
 
+from domain.acid_graph.acid_graph import AcidGraph
 from domain.acid_graph.graph_from_rban import process_rban_compound
 from domain.match.compound_match import parse_compound_match, CompoundMatch
 from domain.replacement.replacement import Replacement, build_graph_with_replacement
@@ -48,7 +49,8 @@ def generate_replacements(compound_variant_match: str, reverse_monomers: Dict[st
     return all_replacements
 
 
-def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, path_to_output: str):
+def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, path_to_output: str,
+                 bonds: bool):
     with open(reverse_path) as file:
         reverse_monomers = json.load(file)
 
@@ -68,9 +70,19 @@ def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, pat
 
         bgc_to_graphs = defaultdict(list)
         for rep in reps:
-            bgc_to_graphs[rep.bgc].append(
-                str(build_graph_with_replacement(graph, rep))
-            )
+            if not bonds:
+                new_graph = build_graph_with_replacement(graph, rep)
+                new_graph_no_bonds = AcidGraph()
+                new_graph_no_bonds.vertex_names = new_graph.vertex_names
+                new_graph_no_bonds.edges = [(a, b) for a, b, c in new_graph.edges]
+                bgc_to_graphs[rep.bgc].append(
+                    str(new_graph_no_bonds)
+                )
+
+            else:
+                bgc_to_graphs[rep.bgc].append(
+                    str(build_graph_with_replacement(graph, rep))
+                )
 
         for bgc, graphs in bgc_to_graphs.items():
             with open(os.path.join(path_to_output, compound_name + '_' + bgc + '.txt'), 'w') as file:
