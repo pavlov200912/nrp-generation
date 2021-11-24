@@ -1,4 +1,4 @@
-from typing import List
+import re
 
 import pandas as pd
 
@@ -63,18 +63,23 @@ def parse_compound_match(match_file_content: str):
     top_df = None
     top_name = None
 
+    dfs = []
+    bgcs = []
+    scores = []
+
     for m in matches:
         match_lines = m.split('\n')
         compound_name = match_lines[0]
         predictors_path = match_lines[1]
+        bgc = "BGC" + re.findall("BGC([0-9]*)_", predictors_path)[0]
+
         score = float(match_lines[2].strip().split(' ')[-1])
         alignment = match_lines[3]
         tsv_report = '\n'.join(match_lines[4:])
-        if max_score is None or max_score < score:
-            max_score = score
-            top_df = pd.DataFrame([x.split(' ') for x in tsv_report.split('\n')[1:]],
-                                  columns=tsv_report.split('\n')[0].split(' '))
+        df = pd.DataFrame([x.split(' ') for x in tsv_report.split('\n')[1:]],
+                          columns=tsv_report.split('\n')[0].split(' '))
+        dfs.append(df)
+        bgcs.append(bgc)
+        scores.append(score)
 
-            top_name = compound_name
-
-    return top_df, top_name
+    return dfs, bgcs, scores

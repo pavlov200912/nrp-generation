@@ -1,21 +1,23 @@
 import json
 import os
+from collections import defaultdict
 from typing import List, Dict
 
 from domain.acid_graph.graph_from_rban import process_rban_compound
-from domain.acid_graph.save_graph import save_graph
 from domain.match.compound_match import parse_compound_match, CompoundMatch
 from domain.replacement.replacement import Replacement, build_graph_with_replacement
 
 
-def replacements_from_compound(match: CompoundMatch, reverse_monomers: Dict[str, List[str]]) -> List[Replacement]:
+def replacements_from_compound(match: CompoundMatch, bgc: str, reverse_monomers: Dict[str, List[str]]) -> List[
+    Replacement]:
     replacements = []
     for new_graph_acid in reverse_monomers[match.genome_acid]:
         replacements.append(
             Replacement(
                 match.rban_graph_id,
                 match.graph_acid,
-                new_graph_acid
+                new_graph_acid,
+                bgc
             )
         )
     return replacements
@@ -23,20 +25,25 @@ def replacements_from_compound(match: CompoundMatch, reverse_monomers: Dict[str,
 
 def generate_replacements(compound_variant_match: str, reverse_monomers: Dict[str, List[str]]) -> List[
     Replacement]:
-    df, name = parse_compound_match(compound_variant_match)
-    df['neq'] = (df['Prediction_Top_Residue'] != df['Matched_Residue'])
-    df['not_none'] = (df['Prediction_Top_Residue'] != 'none') & (df['Matched_Residue'] != 'none')
-    replacement_rows = (df[df['not_none'] & df['neq']])
-
+    dfs, bgcs, scores = parse_compound_match(compound_variant_match)
     all_replacements = []
 
-    print(f"Found {len(replacement_rows)} mismatches")
+    print(f"Found {len(dfs)} alignments")
+    replacement_count = 0
+    for df, bgc in zip(dfs, bgcs):
 
-    for _, row in replacement_rows.iterrows():
-        match = CompoundMatch.from_dataframe_row(row)
-        reps = replacements_from_compound(match, reverse_monomers)
-        all_replacements.extend(reps)
+        df['neq'] = (df['Prediction_Top_Residue'] != df['Matched_Residue'])
+        df['not_none'] = (df['Prediction_Top_Residue'] != 'none') & (df['Matched_Residue'] != 'none')
+        replacement_rows = (df[df['not_none'] & df['neq']])
 
+        replacement_count += len(replacement_rows)
+
+        for _, row in replacement_rows.iterrows():
+            match = CompoundMatch.from_dataframe_row(row)
+            reps = replacements_from_compound(match, bgc, reverse_monomers)
+            all_replacements.extend(reps)
+
+    print(f"Found {replacement_count} mismatches")
     print(f"Generated {len(all_replacements)} replacements")
     return all_replacements
 
@@ -58,7 +65,13 @@ def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, pat
         graph = process_rban_compound(compound_graph)
 
         reps = generate_replacements(compound_variant_match, reverse_monomers)
-        for rep in reps:
-            new_graph = build_graph_with_replacement(graph, rep)
-            save_graph(path_to_output, new_graph, base_name=compound_name + '_' + variant_name)
 
+        bgc_to_graphs = defaultdict(list)
+        for rep in reps:
+            bgc_to_graphs[rep.bgc].append(
+                str(build_graph_with_replacement(graph, rep))
+            )
+
+        for bgc, graphs in bgc_to_graphs.items():
+            with open(os.path.join(path_to_output, compound_name + '_' + bgc + '.txt'), 'w') as file:
+                file.write('\n'.join(graphs))
