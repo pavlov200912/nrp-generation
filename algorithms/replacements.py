@@ -1,8 +1,10 @@
 import json
 import os
+import shutil
 from collections import defaultdict
 from typing import List, Dict
 
+from domain.acid_graph.acid_graph import AcidGraph
 from domain.acid_graph.graph_from_rban import process_rban_compound
 from domain.match.compound_match import parse_compound_match, CompoundMatch
 from domain.replacement.replacement import Replacement, build_graph_with_replacement
@@ -48,12 +50,25 @@ def generate_replacements(compound_variant_match: str, reverse_monomers: Dict[st
     return all_replacements
 
 
-def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, path_to_output: str):
+def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, path_to_output: str,
+                 bonds: bool):
     with open(reverse_path) as file:
         reverse_monomers = json.load(file)
 
     with open(path_to_rban) as rban_file:
         compounds = json.load(rban_file)
+
+    print("WARNING: Removing content from", path_to_output)
+    for filename in os.listdir(path_to_output):
+        if 'compound' in filename and 'BGC' in filename:
+            file_path = os.path.join(path_to_output, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
 
     for compound_variant_path in os.listdir(path_to_details):
         compound_name = '_'.join(compound_variant_path.split('_')[:2])
@@ -68,10 +83,20 @@ def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, pat
 
         bgc_to_graphs = defaultdict(list)
         for rep in reps:
-            bgc_to_graphs[rep.bgc].append(
-                str(build_graph_with_replacement(graph, rep))
-            )
+            if not bonds:
+                new_graph = build_graph_with_replacement(graph, rep)
+                new_graph_no_bonds = AcidGraph()
+                new_graph_no_bonds.vertex_names = new_graph.vertex_names
+                new_graph_no_bonds.edges = [(a, b) for a, b, c in new_graph.edges]
+                bgc_to_graphs[rep.bgc].append(
+                    str(new_graph_no_bonds)
+                )
+
+            else:
+                bgc_to_graphs[rep.bgc].append(
+                    str(build_graph_with_replacement(graph, rep))
+                )
 
         for bgc, graphs in bgc_to_graphs.items():
-            with open(os.path.join(path_to_output, compound_name + '_' + bgc + '.txt'), 'w') as file:
+            with open(os.path.join(path_to_output, compound_name + '_' + bgc + '.txt'), 'a') as file:
                 file.write('\n'.join(graphs))
