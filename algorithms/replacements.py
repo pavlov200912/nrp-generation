@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from collections import defaultdict
 from typing import List, Dict
 
@@ -57,6 +58,18 @@ def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, pat
     with open(path_to_rban) as rban_file:
         compounds = json.load(rban_file)
 
+    print("WARNING: Removing content from", path_to_output)
+    for filename in os.listdir(path_to_output):
+        if 'compound' in filename and 'BGC' in filename:
+            file_path = os.path.join(path_to_output, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+
     for compound_variant_path in os.listdir(path_to_details):
         compound_name = '_'.join(compound_variant_path.split('_')[:2])
         variant_name = compound_variant_path.split('_')[-1].split('.')[0]
@@ -85,5 +98,5 @@ def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, pat
                 )
 
         for bgc, graphs in bgc_to_graphs.items():
-            with open(os.path.join(path_to_output, compound_name + '_' + bgc + '.txt'), 'w') as file:
+            with open(os.path.join(path_to_output, compound_name + '_' + bgc + '.txt'), 'a') as file:
                 file.write('\n'.join(graphs))
