@@ -12,6 +12,8 @@ if __name__ == "__main__":
     parser.add_argument('--algorithm', default='simple', help='code name of an algorithm to use')
     parser.add_argument('--output', help='path to output directory')
     parser.add_argument('--base_name', help='base name for output graph files')
+    parser.add_argument('--info_format', action='store_true', help='whether to use .info nerpa graph format')
+    parser.add_argument('--info_file', help='obligatory in case if --info_format used, path to file .info')
     parser.add_argument('--monomers',
                         help='path to the file with mapping from genome monomers to popular variants of graph monomers')
 
@@ -47,4 +49,5 @@ if __name__ == "__main__":
         if not os.path.exists(path_to_rban):
             raise FileNotFoundError("Can'r find rban.output.json")
 
-        replacements(path_to_details, path_to_rban, reverse_path, output_dir_path, args.feature)
+        replacements(path_to_details, path_to_rban, reverse_path, output_dir_path, args.feature,
+                     args.info_format, args.info_file)
