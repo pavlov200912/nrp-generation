@@ -95,7 +95,7 @@ def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, pat
         else:
             compound_name = compound_variant_path[:-len('.match')]
             graph = AcidLabeledGraph().from_string(compounds[compound_name])
-            print(graph)
+
 
         with open(os.path.join(path_to_details, compound_variant_path)) as match_file:
             compound_variant_match = match_file.read()
