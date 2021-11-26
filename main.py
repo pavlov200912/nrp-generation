@@ -45,9 +45,12 @@ if __name__ == "__main__":
         if not os.path.exists(path_to_details):
             raise FileNotFoundError("Can't find directory details")
 
-        path_to_rban = os.path.join(input_dir_path, 'rban.output.json')
-        if not os.path.exists(path_to_rban):
-            raise FileNotFoundError("Can'r find rban.output.json")
+        if not args.info_format:
+            path_to_rban = os.path.join(input_dir_path, 'rban.output.json')
+            if not os.path.exists(path_to_rban):
+                raise FileNotFoundError("Can'r find rban.output.json")
+        else:
+            path_to_rban = ''
 
         replacements(path_to_details, path_to_rban, reverse_path, output_dir_path, args.feature,
                      args.info_format, args.info_file)

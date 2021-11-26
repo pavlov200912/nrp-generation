@@ -93,9 +93,13 @@ def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, pat
             compound_graph = [c for c in compounds if c['id'] == compound_name][0]
             graph = process_rban_compound(compound_graph)
         else:
-            compound_name = compound_variant_path[:-len('.match')]
-            graph = AcidLabeledGraph().from_string(compounds[compound_name])
 
+            compound_name = compound_variant_path[:-len('.match')]
+            print("Processing", compound_name)
+            if bonds:
+                graph = AcidLabeledGraph().from_string(compounds[compound_name])
+            else:
+                graph = AcidGraph().from_string(compounds[compound_name])
 
         with open(os.path.join(path_to_details, compound_variant_path)) as match_file:
             compound_variant_match = match_file.read()
@@ -107,10 +111,13 @@ def replacements(path_to_details: str, path_to_rban: str, reverse_path: str, pat
         bgc_to_graphs = defaultdict(list)
         for rep in reps:
             if not bonds:
-                new_graph = build_graph_with_replacement(graph, rep)
+                new_graph = AcidGraph()
+                new_graph.vertex_names = graph.vertex_names
+                new_graph.edges = graph.edges
+                new_graph.vertex_names[rep.replacement_node_index] = rep.genome_acid
                 new_graph_no_bonds = AcidGraph()
                 new_graph_no_bonds.vertex_names = new_graph.vertex_names
-                new_graph_no_bonds.edges = [(a, b) for a, b, c in new_graph.edges]
+                new_graph_no_bonds.edges = [(a, b) for a, b in new_graph.edges]
 
                 bgc_to_graphs[rep.bgc].append(
                     str(new_graph_no_bonds)
